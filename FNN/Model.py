@@ -12,16 +12,13 @@ class Model:
 	_model = None
 	model_dir = "C:\\Users\\ASUS\\Documents\\PW\\SieciNeuronowe\\Projekt2\\Model"
 
-	def __init__(self, model_dir=None):
+	def __init__(self, model_dir):
 		"""
         Initializes model
         :param model_dir: directory with model, it can be trained and used to predict rotation
         or with checkpoints to continue training
         """
-		if model_dir is None:
-			"C:\\Users\\ASUS\\Documents\\PW\\SieciNeuronowe\\Projekt2\\Model"
-		else:
-			self.model_dir = model_dir
+		self.model_dir = model_dir
 
 	def get_model(self):
 		if self._model_graph is None:
@@ -36,55 +33,17 @@ class Model:
 		network = input_data(shape=[None, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS])
 		# VGG Model
 		logging.info("Input shape: {}".format(network.shape))
-		network = conv_2d(network, 64, 3, padding="valid", activation="relu")
+		network = conv_2d(network, 32, 3, padding="same", activation="relu")
+		network = max_pool_2d(network, 2, padding='same')
+		network = conv_2d(network, 32, 3, padding="same", activation="relu")
+		network = max_pool_2d(network, 2, padding='same')
+
+		# fully connected
+		network = conv_2d(network, 128, 2, padding='same', activation='relu')
 		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 64, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = max_pool_2d(network, 2)
-		logging.info("Pool shape: {}".format(network.shape))
-		network = conv_2d(network, 128, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 128, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = max_pool_2d(network, 2)
-		logging.info("Pool shape: {}".format(network.shape))
-		network = conv_2d(network, 256, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 256, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 256, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = max_pool_2d(network, 2)
-		logging.info("Pool shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = max_pool_2d(network, 2)
-		logging.info("Pool shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = conv_2d(network, 512, 3, padding="valid", activation="relu")
-		logging.info("Conv shape: {}".format(network.shape))
-		network = max_pool_2d(network, 2)
-		logging.info("Pool shape: {}".format(network.shape))
-		# fully connected layers to convolution layers
-		# network = fully_connected(network, 4096)
-		# network = fully_connected(network, 4096)
-		# network = fully_connected(network, 4096)
-		# network = conv_2d(network, 4096, 5)
-		network = conv_2d(network, 4096, 2)
-		network = conv_2d(network, 4096, 2)
-		network = conv_2d(network, 4096, 2)
-		logging.info("Conv shape: {}".format(network.shape))
-		# network = conv_2d(network, 1024, 5)
 		network = conv_2d(network, NO_CLASSES, 1)
 		logging.info("Last conv shape: {}".format(network.shape))
-		network = upsample_2d(network, 112) #for now it is hardcoded, I will find better solution later ~AM
+		network = upsample_2d(network, 4)  # for now it is hardcoded, I will find better solution later ~AM
 		network = regression(
 			network,
 			learning_rate=LEARNING_RATE,

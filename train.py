@@ -5,7 +5,8 @@ import numpy as np
 from FNN.TrainModel import TrainModel
 from config import *
 from class_mappings import *
-
+import time
+import datetime
 logging.basicConfig(filename=TRAIN_LOG_FILE, level=logging.DEBUG)
 
 
@@ -38,7 +39,7 @@ def rgb_image2class_image(rgb_image):
 	return np.array(new_image)
 
 
-def load_data():
+def load_data(max_load, curr_idx):
 	x = []
 	y = []
 	x_v = []
@@ -47,6 +48,8 @@ def load_data():
 	for raw_image_path, labaled_image_path, count in zip(os.listdir(RAW_IMAGES_PATH),
 	                                                     os.listdir(LABELED_IMAGES_PATH),
 	                                                     range(1, MAX_LOAD_IMAGES + 1)):
+		if count <= curr_idx: #I know it is shitty solution, TODO: fix it ~AM
+			continue
 		print("{} {} {}".format(raw_image_path, labaled_image_path, count))
 
 		raw_image = cv2.imread(os.path.join(RAW_IMAGES_PATH, raw_image_path))
@@ -64,25 +67,33 @@ def load_data():
 			x.append(raw_image)
 			y.append(labeled_image)
 
+		if count >= curr_idx + max_load: #I know it is shitty solution, TODO: fix it ~AM
+			break
+
 	return np.asarray(x), np.asarray(y), np.asarray(x_v), np.asarray(y_v)
 
 
 def main():
-	x, y, x_v, y_v = load_data()
-	logging.info("Lengths: x: {}, y: {}, x_v: {}, y_v: {}".format(len(x), len(y), len(x_v), len(y_v)))
-	logging.info("Trainig data shape: x: {}, y: {}".format(x.shape, y.shape))
-	logging.info("Validation data shape: x_v: {}, y_v: {}".format(x_v.shape, y_v.shape))
+	iterations = 1
+	load_by_iter = int(MAX_LOAD_IMAGES / iterations)
 
-	logging.info("START")
-	# x = np.reshape(x, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS])
-	# x_v = np.reshape(x_v, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS])
-	#
-	# y = np.reshape(x_v, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, NO_CLASSES])
-	# y_v = np.reshape(y_v, [-1, IMAGE_WIDTH, IMAGE_HEIGHT, NO_CLASSES])
+	for iteration in range(iterations):
+		logging.info("START ITER {}".format(iteration + 1))
+		x, y, x_v, y_v = load_data(load_by_iter, iteration * load_by_iter)
+		print(x.dtype)
+		logging.info("[{}]".format(datetime.datetime.now()))
+		logging.info("Lengths: x: {}, y: {}, x_v: {}, y_v: {}".format(len(x), len(y), len(x_v), len(y_v)))
+		logging.info("Trainig data shape: x: {}, y: {}".format(x.shape, y.shape))
+		logging.info("Validation data shape: x_v: {}, y_v: {}".format(x_v.shape, y_v.shape))
 
-	model = TrainModel(MODEL_DIRECTORY + '\\trained-model')
-	print("Input shape: {}".format(x.shape))
-	model.train(x, y, x_v, y_v)
+		model = TrainModel(MODEL_DIRECTORY + '\\trained-model')
+		# print("Input shape: {}".format(x.shape))
+		model.train(x, y, x_v, y_v)
+		del x
+		del y
+		del x_v
+		del y_v
+
 	logging.info("FINISH")
 
 
