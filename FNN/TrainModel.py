@@ -6,14 +6,12 @@ class TrainModel(Model):
 	def train(self, x, y, x_val, y_val):
 		model = self.get_model()
 
-		model.fit(x,
-		          y,
-		          n_epoch=EPOCHS_COUNT,
-		          validation_set=(x_val, y_val),
-		          shuffle=True,
-		          show_metric=True,
-		          batch_size=4,
-		          snapshot_step=10,
-		          snapshot_epoch=True,
-		          run_id='NvidiaModel')
-		model.save(self.model_dir)
+		model.fit(
+			x,y, batch_size=4, epochs=EPOCHS_COUNT,verbose=1,validation_data=(x_val, y_val)
+		)
+		model_json = model.to_json()
+
+		with open("model.json", "w") as json_file:
+			json_file.write(model_json)
+		model.save_weights("model.h5")
+		# model.save(self.model_dir)
