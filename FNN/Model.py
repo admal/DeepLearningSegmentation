@@ -26,6 +26,7 @@ class Model:
 	def _model_keras(self):
 		model = tf.keras.models.Sequential()
 		model.add(tf.keras.layers.Conv2D(
+			input_shape=(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_CHANNELS),
 			filters=32,
 			kernel_size=[3, 3],
 			padding='same',
@@ -59,10 +60,11 @@ class Model:
 			padding='same',
 			activation='relu'
 		))
+		model.add(tf.keras.layers.UpSampling2D(size=(4,4)))
 		model.compile(
 			loss=tf.keras.losses.categorical_crossentropy,
 			optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE),
-			metrics=['loss', 'accuracy']
+			metrics=['accuracy']
 		)
 		return model
 
