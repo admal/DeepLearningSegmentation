@@ -1,12 +1,12 @@
 import logging
-import os
 
-import tensorflow as tf
-
+from keras.models import *
+from keras.layers import *
 from config import *
+from keras.models import Model
 
 
-class Model:
+class MyModel:
     _model_graph = None
     _model = None
     model_dir = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation"
@@ -27,7 +27,7 @@ class Model:
         json_file = open('model.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-        loaded_model = tf.keras.models.model_from_json(loaded_model_json)
+        loaded_model = model_from_json(loaded_model_json)
         # load weights into new model
         loaded_model.load_weights("model.h5")
         print("Loaded model from disk")
@@ -41,94 +41,90 @@ class Model:
 
         return self._model
 
-    def add_conv(self, model):
+    def add_conv(self, model, filter_size=NO_CLASSES):
         model.add(tf.keras.layers.BatchNormalization())
         model.add(tf.keras.layers.Conv2D(
-            filters=NO_CLASSES,
+            filters=filter_size,
             kernel_size=[3, 3],
             padding='same',
             activation='relu'
         ))
-
 
     def max_pooling(self):
         return tf.keras.layers.MaxPool2D(
             pool_size=(2, 2),
             padding='same')
-    def up_sampling(self,model):
+
+    def up_sampling(self, model):
         model.add(tf.keras.layers.UpSampling2D(size=(2, 2)))
+
     def _model_keras(self):
-        model = tf.keras.models.Sequential()
-        #first
-        model.add(tf.keras.layers.Conv2D(
-            input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS),
-            filters=NO_CLASSES,
-            kernel_size=[3, 3],
-            padding='same',
-            activation='relu'
-        ))
-        model.add(tf.keras.layers.BatchNormalization())
-        self.add_conv(model)
-        model.add(self.max_pooling())
 
-        # second
-        self.add_conv(model)
-        self.add_conv(model)
-        model.add(self.max_pooling())
-        # third
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        model.add(self.max_pooling())
-        # fourth
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        model.add(self.max_pooling())
+        kernel = 3
+        filter_size = 64
+        pad = 1
+        pool_size = 2
 
-        # fifth
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        model.add(self.max_pooling())
+        model = Sequential()
+        model.add(Layer(input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH,3)))
 
+        # encoder
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(filter_size, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(pool_size, pool_size)))
 
-        model.add(tf.keras.layers.Conv2D(
-            filters=128,
-            kernel_size=(2, 2),
-            padding='same',
-            activation='relu'
-        ))
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(128, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(pool_size, pool_size)))
 
-        self.up_sampling(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(256, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(pool_size, pool_size)))
 
-        self.up_sampling(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(512, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
+        model.add(Activation('relu'))
 
-        self.up_sampling(model)
-        self.add_conv(model)
-        self.add_conv(model)
-        self.add_conv(model)
+        # decoder
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(512, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
 
-        self.up_sampling(model)
-        self.add_conv(model)
-        self.add_conv(model)
+        model.add(UpSampling2D(size=(pool_size, pool_size)))
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(256, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
 
-        self.up_sampling(model)
-        self.add_conv(model)
-        self.add_conv(model)
+        model.add(UpSampling2D(size=(pool_size, pool_size)))
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(128, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
 
-        model.add(tf.keras.layers.Dense(NO_CLASSES, activation='softmax'))
-        model.compile(
-            loss=tf.keras.losses.categorical_crossentropy,
-            optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE),
-            metrics=['accuracy']
-        )
+        model.add(UpSampling2D(size=(pool_size, pool_size)))
+        model.add(ZeroPadding2D(padding=(pad, pad)))
+        model.add(Convolution2D(filter_size, kernel, kernel, border_mode='valid'))
+        model.add(BatchNormalization())
+
+        model.add(Convolution2D(NO_CLASSES, 1, 1, border_mode='valid', ))
+
+        model.outputHeight = model.output_shape[-2]
+        model.outputWidth = model.output_shape[-1]
+
+        # model.add(Reshape((NO_CLASSES, model.output_shape[-2] * model.output_shape[-1]),
+        #                   input_shape=(NO_CLASSES, model.output_shape[-2], model.output_shape[-1])))
+
+        # model.add(Permute((2, 1)))
+        model.add(Activation('softmax'))
+
+        model.compile(loss="categorical_crossentropy", optimizer=optimizers.adam(LEARNING_RATE), metrics=['accuracy'])
+
         return model
 
     def _model_fn(self, features, labels, mode):

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-from FNN.Model import Model
-from FNN.PredictModel import PredictModel
+from FNN.MyModel import MyModel
+from FNN.PredictModel import PredictMyModel
 from class_mappings import *
 from config import *
 
@@ -23,14 +23,14 @@ def labeled_image2rgb_image(labeled_image):
 
 
 def main():
-    raw_image_path = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation\test\38.png"
+    raw_image_path = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation\test\madzia.jpg"
     image = cv2.imread(raw_image_path)
 
     image = cv2.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    image = np.expand_dims(image, axis=2)
-    model = PredictModel(MODEL_DIRECTORY)
-    ret_model = Model.load_model()
+    # image = np.expand_dims(image, axis=2)
+    model = PredictMyModel(MODEL_DIRECTORY)
+    ret_model = MyModel.load_model()
     ret = model.predict_on_model(ret_model, image)
     labeled_image = ret[0]
     rgb_image = labeled_image2rgb_image(labeled_image)

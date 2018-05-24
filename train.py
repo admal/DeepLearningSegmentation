@@ -6,13 +6,18 @@ import re
 import tensorflow as tf
 import cv2
 import numpy as np
-from FNN.Model import Model
-from FNN.TrainModel import TrainModel
+from keras import optimizers
+
+from FNN.MyModel import MyModel
+from FNN.PredictModel import PredictMyModel
+from FNN.TrainModel import TrainMyModel
 from config import *
 from class_mappings import *
 
 import time
 import datetime
+
+from predict import labeled_image2rgb_image
 
 logging.basicConfig(filename=TRAIN_LOG_FILE, level=logging.DEBUG)
 
@@ -116,11 +121,11 @@ def load_data(start, end):
         count += 1
 
         raw_image = cv2.imread(os.path.join(RAW_IMAGES_PATH, raw_image_path))
-        raw_image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2GRAY)
+        raw_image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2RGB)
         raw_image = cv2.resize(raw_image, (IMAGE_WIDTH, IMAGE_HEIGHT))
         raw_image = normalize_image(raw_image)
 
-        raw_image = np.expand_dims(raw_image, axis=2)
+        # raw_image = np.expand_dims(raw_image, axis=2)
 
         serializefile = LABELED_IMAGES_PATH + "\\" + labaled_image_path
 
@@ -140,12 +145,10 @@ def load_data(start, end):
 
 
 def main():
-    model = TrainModel(MODEL_DIRECTORY)
-    load_model = Model.load_model()
+    model = TrainMyModel(MODEL_DIRECTORY)
+    load_model = model.load_model()
     if load_model:
-        load_model.compile(loss=tf.keras.losses.categorical_crossentropy,
-                           optimizer=tf.keras.optimizers.Adam(lr=LEARNING_RATE),
-                           metrics=['accuracy'])
+        load_model.compile(loss="categorical_crossentropy", optimizer=optimizers.adam(LEARNING_RATE), metrics=['accuracy'])
     # print("Input shape: {}".format(x.shape))
 
     count = 0
@@ -158,12 +161,20 @@ def main():
             from_num = 0
             to_num = MAX_LOAD_IMAGES
             continue
-        print(x.dtype)
         logging.info("[{}]".format(datetime.datetime.now()))
         logging.info("Lengths: x: {}, y: {}, x_v: {}, y_v: {}".format(len(x), len(y), len(x_v), len(y_v)))
         logging.info("Training data shape: x: {}, y: {}".format(x.shape, y.shape))
         logging.info("Validation data shape: x_v: {}, y_v: {}".format(x_v.shape, y_v.shape))
-        model.train(x, y, x_v, y_v, load_model)
+
+        load_model = model.train(x, y, x_v, y_v, load_model)
+        raw_image_path = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation\test\197.png"
+        image = cv2.imread(raw_image_path)
+        image = cv2.resize(image, (IMAGE_WIDTH, IMAGE_HEIGHT))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = np.expand_dims(image, axis=2)
+        ret = PredictMyModel.predict_on_model(load_model, image)
+        rgb_image = labeled_image2rgb_image(ret[0])
+        cv2.imwrite('C:\\Users\\wpiot\\PycharmProjects\\DeepLearningSegmentation\\results\\{}.png'.format(count),rgb_image )
         count += 1
         if all_over:
             from_num = 0
