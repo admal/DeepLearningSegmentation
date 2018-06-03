@@ -69,7 +69,6 @@ def VGGSegnet(nb_classes, input_height=240, input_width=240, vgg_level=3):
     print(model.summary())
     model.add(Reshape((nb_classes, model.output_shape[2] * model.output_shape[1])))
 
-
     model.add(Permute((2, 1)))
     model.add(Activation('softmax'))
 
