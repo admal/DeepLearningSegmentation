@@ -4,7 +4,6 @@ from keras.layers import *
 import os
 
 file_path = os.path.dirname(os.path.abspath(__file__))
-VGG_Weights_path = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation\FNN\data\vgg16_weights_th_dim_ordering_th_kernels.h5"
 IMAGE_ORDERING = 'channels_last'
 
 
