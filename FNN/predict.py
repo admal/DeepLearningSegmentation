@@ -2,7 +2,7 @@ import cv2
 import datetime
 import numpy as np
 
-from FNN2.VggnetFCN import VggnetFCN
+from FNN.VggnetFCN import VggnetFCN
 from class_mappings import *
 from config import *
 import tensorflow as tf

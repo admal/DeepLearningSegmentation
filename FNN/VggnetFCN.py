@@ -31,11 +31,6 @@ class VggnetFCN:
 	model_dir = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation"
 
 	def __init__(self, model_dir):
-		"""
-		Initializes model
-		:param model_dir: directory with model, it can be trained and used to predict rotation
-		or with checkpoints to continue training
-		"""
 		self.model_dir = model_dir
 
 	@staticmethod

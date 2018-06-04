@@ -6,14 +6,13 @@ import tensorflow as tf
 import cv2
 import numpy as np
 
-from FNN2.VggnetFCN import VggnetFCN
+from FNN.VggnetFCN import VggnetFCN
 from config import *
 from class_mappings import *
 
-import time
 import datetime
 
-from predict import labeled_image2rgb_image
+from FNN.predict import labeled_image2rgb_image
 
 logging.basicConfig(filename=TRAIN_LOG_FILE, level=logging.DEBUG)
 
@@ -33,7 +32,7 @@ def get_classes_from_rgb(rgb):
 		classes[rgb2class[tuple_rgb]] = 1
 	else:
 		print("unknown class")
-		classes[30] = 1  # TMP! TODO: do sth with unprocessed pixels
+		classes[30] = 1
 	return classes
 
 
@@ -151,7 +150,7 @@ def main():
 	epoch_count = 1
 	logging.info("START EPOCH 1")
 	logging.info("[{}]".format(datetime.datetime.now()))
-	while count < 7*15:
+	while count < 7*EPOCHS_COUNT:
 		x, y, x_v, y_v, all_over = load_data(from_num, to_num)
 		if len(x_v) == 0 or len(y_v) == 0:
 			from_num = 0

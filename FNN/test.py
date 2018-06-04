@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-import datetime
 
-from FNN2.VggnetFCN import VggnetFCN
+from FNN.VggnetFCN import VggnetFCN
 from config import *
-from predict import labeled_image2rgb_image
+from FNN.predict import labeled_image2rgb_image
 
 
 def main():
