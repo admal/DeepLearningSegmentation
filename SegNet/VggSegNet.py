@@ -4,7 +4,6 @@ from keras.layers import *
 import os
 
 file_path = os.path.dirname(os.path.abspath(__file__))
-VGG_Weights_path = r"C:\Users\wpiot\PycharmProjects\DeepLearningSegmentation\FNN\data\vgg16_weights_th_dim_ordering_th_kernels.h5"
 IMAGE_ORDERING = 'channels_last'
 
 
@@ -68,7 +67,6 @@ def VGGSegnet(nb_classes, input_height=240, input_width=240, vgg_level=3):
 
     print(model.summary())
     model.add(Reshape((nb_classes, model.output_shape[2] * model.output_shape[1])))
-
 
     model.add(Permute((2, 1)))
     model.add(Activation('softmax'))

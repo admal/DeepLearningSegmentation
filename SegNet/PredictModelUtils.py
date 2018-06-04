@@ -1,5 +1,4 @@
-from FNN.MyModel import MyModel
-import tensorflow as tf
+from SegNet.MyModel import MyModel
 import numpy as np
 
 
